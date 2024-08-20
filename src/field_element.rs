@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Error, Result};
 
 fn mod_it(left: isize, right: isize) -> isize {
     let left = match left < 0 {
@@ -17,7 +17,7 @@ struct FieldElement {
 
 impl FieldElement {
     fn add(self, right: Self) -> Result<Self> {
-        if !self.prime == right.prime {
+        if self.prime != right.prime {
             return Err(anyhow!("Prime base not the same between two FieldElement"));
         };
 
@@ -33,6 +33,24 @@ impl FieldElement {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_exception_raised() {
+        let a = FieldElement {
+            number: 44,
+            prime: 57,
+        };
+        let b = FieldElement {
+            number: 33,
+            prime: 58,
+        };
+        let result = a.add(b);
+        let error = result.unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "Prime base not the same between two FieldElement"
+        );
+    }
 
     #[test]
     fn test_positive_mod_1() {
