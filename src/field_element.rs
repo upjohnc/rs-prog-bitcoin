@@ -16,9 +16,9 @@ struct FieldElement {
 }
 
 impl FieldElement {
-    fn add(self, right: Self) -> Result<Self> {
-        let temp = self.clone();
-        if !temp.same_base(right.clone()) {
+    fn add(&self, right: &Self) -> Result<Self> {
+        // let temp = self.clone();
+        if !self.same_base(right) {
             return Err(anyhow!("Prime base not the same between two FieldElement"));
         };
 
@@ -30,9 +30,9 @@ impl FieldElement {
         })
     }
 
-    fn mul(self, right: Self) -> Result<Self> {
-        let temp = self.clone();
-        if !temp.same_base(right.clone()) {
+    fn mul(&self, right: &Self) -> Result<Self> {
+        // let temp = self.clone();
+        if !self.same_base(right) {
             return Err(anyhow!("Prime base not the same between two FieldElement"));
         };
 
@@ -45,7 +45,7 @@ impl FieldElement {
         })
     }
 
-    fn same_base(self, right: Self) -> bool {
+    fn same_base(&self, right: &Self) -> bool {
         self.prime == right.prime
     }
 }
@@ -64,7 +64,7 @@ mod tests {
             number: 33,
             prime: 58,
         };
-        let result = a.add(b);
+        let result = a.add(&b);
         let error = result.unwrap_err();
         assert_eq!(
             error.to_string(),
@@ -107,7 +107,7 @@ mod tests {
             prime: 57,
         };
 
-        let result = a.add(b).unwrap();
+        let result = a.add(&b).unwrap();
         let expected = FieldElement {
             number: 20,
             prime: 57,
@@ -126,13 +126,14 @@ mod tests {
             prime: 57,
         };
 
-        let result = a.add(b).unwrap();
+        let result = a.add(&b).unwrap();
         let expected = FieldElement {
             number: 37,
             prime: 57,
         };
         assert_eq!(result, expected);
     }
+
     #[test]
     fn test_add_3() {
         let a = FieldElement {
@@ -148,7 +149,7 @@ mod tests {
             prime: 57,
         };
 
-        let result = a.add(b).unwrap().add(c).unwrap();
+        let result = a.add(&b).unwrap().add(&c).unwrap();
         let expected = FieldElement {
             number: 51,
             prime: 57,
@@ -170,7 +171,7 @@ mod tests {
             prime: 57,
         };
 
-        let result = a.add(b).unwrap().add(c).unwrap();
+        let result = a.add(&b).unwrap().add(&c).unwrap();
         let expected = FieldElement {
             number: 41,
             prime: 57,
@@ -214,7 +215,7 @@ mod tests {
             number: 3,
             prime: 19,
         };
-        let result = a.mul(b).unwrap();
+        let result = a.mul(&b).unwrap();
         let expected = FieldElement {
             number: 15,
             prime: 19,
@@ -232,7 +233,7 @@ mod tests {
             number: 17,
             prime: 19,
         };
-        let result = a.mul(b).unwrap();
+        let result = a.mul(&b).unwrap();
         let expected = FieldElement {
             number: 3,
             prime: 19,
