@@ -17,7 +17,8 @@ struct FieldElement {
 
 impl FieldElement {
     fn add(self, right: Self) -> Result<Self> {
-        if self.prime != right.prime {
+        let temp = self.clone();
+        if !temp.same_base(right.clone()) {
             return Err(anyhow!("Prime base not the same between two FieldElement"));
         };
 
@@ -27,6 +28,25 @@ impl FieldElement {
             number: new_number,
             prime: self.prime,
         })
+    }
+
+    fn mul(self, right: Self) -> Result<Self> {
+        let temp = self.clone();
+        if !temp.same_base(right.clone()) {
+            return Err(anyhow!("Prime base not the same between two FieldElement"));
+        };
+
+        let multiplier = self.number * right.number;
+        let new_number = mod_it(multiplier, self.prime);
+
+        Ok(Self {
+            number: new_number,
+            prime: self.prime,
+        })
+    }
+
+    fn same_base(self, right: Self) -> bool {
+        self.prime == right.prime
     }
 }
 
@@ -182,5 +202,41 @@ mod tests {
             prime: 13,
         };
         assert_ne!(a, b);
+    }
+
+    #[test]
+    fn test_mul_1() {
+        let a = FieldElement {
+            number: 5,
+            prime: 19,
+        };
+        let b = FieldElement {
+            number: 3,
+            prime: 19,
+        };
+        let result = a.mul(b).unwrap();
+        let expected = FieldElement {
+            number: 15,
+            prime: 19,
+        };
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_mul_2() {
+        let a = FieldElement {
+            number: 8,
+            prime: 19,
+        };
+        let b = FieldElement {
+            number: 17,
+            prime: 19,
+        };
+        let result = a.mul(b).unwrap();
+        let expected = FieldElement {
+            number: 3,
+            prime: 19,
+        };
+        assert_eq!(result, expected);
     }
 }
