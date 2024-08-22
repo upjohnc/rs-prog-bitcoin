@@ -17,7 +17,6 @@ struct FieldElement {
 
 impl FieldElement {
     fn add(&self, right: &Self) -> Result<Self> {
-        // let temp = self.clone();
         if !self.same_base(right) {
             return Err(anyhow!("Prime base not the same between two FieldElement"));
         };
@@ -31,7 +30,6 @@ impl FieldElement {
     }
 
     fn mul(&self, right: &Self) -> Result<Self> {
-        // let temp = self.clone();
         if !self.same_base(right) {
             return Err(anyhow!("Prime base not the same between two FieldElement"));
         };
@@ -44,6 +42,28 @@ impl FieldElement {
             prime: self.prime,
         })
     }
+
+    fn power_(&self, right: f64) -> Self {
+        let temp_number = self.number as f64;
+        let power = temp_number.powf(right);
+        let new_number = mod_it(power as isize, self.prime);
+
+        Self {
+            number: new_number,
+            prime: self.prime,
+        }
+    }
+
+    // fn div(&self, right: &Self) -> Self {
+    //         let raise_pow= self.prime - 2;
+    //     let temp_power = &right.power_(raise_pow as f64);
+
+    //     let temp_mul = self.mul(&temp_power).unwrap();
+    //     Self {
+    //         number: temp_mul.number,
+    //         prime: self.prime,
+    //     }
+    // }
 
     fn same_base(&self, right: &Self) -> bool {
         self.prime == right.prime
@@ -240,4 +260,39 @@ mod tests {
         };
         assert_eq!(result, expected);
     }
+
+    #[test]
+    fn test_pow_1() {
+        let a = FieldElement {
+            number: 3,
+            prime: 13,
+        };
+        let power = 3.0;
+
+        let result = a.power_(power);
+        let expected = FieldElement {
+            number: 1,
+            prime: 13,
+        };
+        assert_eq!(result, expected);
+    }
+
+    // #[test]
+    // fn test_div_1() {
+    //     let a = FieldElement {
+    //         number: 3,
+    //         prime: 31,
+    //     };
+    //     let b = FieldElement {
+    //         number: 24,
+    //         prime: 31,
+    //     };
+    //     let result = a.div(&b);
+    //     let expected = FieldElement {
+    //         number: 4,
+    //         prime: 31,
+    //     };
+    //     assert_eq!(result, expected);
+    // }
+
 }
