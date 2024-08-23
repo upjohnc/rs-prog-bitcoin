@@ -4,8 +4,8 @@ use anyhow::{anyhow, Result};
 struct Point {
     a: isize,
     b: isize,
-    x: isize,
-    y: isize,
+    x: Option<isize>,
+    y: Option<isize>,
 }
 
 impl Point {
@@ -13,7 +13,32 @@ impl Point {
         if y.pow(2) != x.pow(3) + a * x + b {
             return Err(anyhow!("Cannot be on the curve"));
         }
-        Ok(Self { a, b, x, y })
+        Ok(Self {
+            a,
+            b,
+            x: Some(x),
+            y: Some(y),
+        })
+    }
+
+    fn new_infinity(a: isize, b: isize) -> Self {
+        Self {
+            a,
+            b,
+            x: None,
+            y: None,
+        }
+    }
+
+    fn add(self, other: Self) -> Self {
+        if self.x.is_none() {
+            return other;
+        }
+        if other.x.is_none() {
+            return self;
+        }
+
+        self
     }
 }
 
