@@ -1,10 +1,6 @@
 use crate::field_element::mod_it;
 use anyhow::Result;
 
-// (17, 64)
-// y2 = 64^2 % 103
-// x3 + 7 (17^3 + 7) % 103
-
 fn confirm_on_curve(x: isize, y: isize, b: isize, base: isize) -> bool {
     let right = mod_it(x.pow(3) + b, base);
     let left = mod_it(y.pow(2), base);
