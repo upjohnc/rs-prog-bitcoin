@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Error, Result};
 
-fn mod_it(left: isize, right: isize) -> isize {
+pub fn mod_it(left: isize, right: isize) -> isize {
     let left = match left < 0 {
         true => right + left,
         _ => left,
@@ -294,5 +294,4 @@ mod tests {
     //     };
     //     assert_eq!(result, expected);
     // }
-
 }
