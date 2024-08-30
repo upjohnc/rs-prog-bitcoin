@@ -11,11 +11,14 @@ pub fn mod_it(left: isize, right: isize) -> isize {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct FieldElement {
-    pub number: isize,
-    pub prime: isize,
+    number: isize,
+    prime: isize,
 }
 
 impl FieldElement {
+    pub fn new(number: isize, prime: isize) -> Self {
+        Self { number, prime }
+    }
     pub fn add(&self, right: &Self) -> Result<Self> {
         if !self.same_base(right) {
             return Err(anyhow!("Prime base not the same between two FieldElement"));

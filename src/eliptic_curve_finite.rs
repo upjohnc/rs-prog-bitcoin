@@ -36,14 +36,8 @@ mod tests {
     #[test]
     fn test_confirm_on_curve() {
         let prime_base = 223;
-        let a = FieldElement {
-            prime: prime_base,
-            number: 0,
-        };
-        let b = FieldElement {
-            number: 7,
-            prime: prime_base,
-        };
+        let a = FieldElement::new(0, prime_base);
+        let b = FieldElement::new(7, prime_base);
 
         let values_to_test = vec![
             (192, 105, true),
@@ -53,14 +47,8 @@ mod tests {
             (42, 99, false),
         ];
         for (x, y, expected) in values_to_test {
-            let x_f = FieldElement {
-                number: x,
-                prime: prime_base,
-            };
-            let y_f = FieldElement {
-                number: y,
-                prime: prime_base,
-            };
+            let x_f = FieldElement::new(x, prime_base);
+            let y_f = FieldElement::new(y, prime_base);
             let result = confirm_on_curve(x_f, y_f, a.clone(), b.clone()).unwrap();
             assert_eq!(expected, result);
         }
