@@ -10,13 +10,13 @@ pub fn mod_it(left: isize, right: isize) -> isize {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-struct FieldElement {
-    number: isize,
-    prime: isize,
+pub struct FieldElement {
+    pub number: isize,
+    pub prime: isize,
 }
 
 impl FieldElement {
-    fn add(&self, right: &Self) -> Result<Self> {
+    pub fn add(&self, right: &Self) -> Result<Self> {
         if !self.same_base(right) {
             return Err(anyhow!("Prime base not the same between two FieldElement"));
         };
@@ -29,7 +29,7 @@ impl FieldElement {
         })
     }
 
-    fn mul(&self, right: &Self) -> Result<Self> {
+    pub fn mul(&self, right: &Self) -> Result<Self> {
         if !self.same_base(right) {
             return Err(anyhow!("Prime base not the same between two FieldElement"));
         };
@@ -43,9 +43,9 @@ impl FieldElement {
         })
     }
 
-    fn power_(&self, right: f64) -> Self {
-        let temp_number = self.number as f64;
-        let power = temp_number.powf(right);
+    pub fn power_(&self, right: u32) -> Self {
+        let temp_number = self.number as u32;
+        let power = temp_number.pow(right);
         let new_number = mod_it(power as isize, self.prime);
 
         Self {
@@ -54,16 +54,16 @@ impl FieldElement {
         }
     }
 
-    // fn div(&self, right: &Self) -> Self {
-    //         let raise_pow= self.prime - 2;
-    //     let temp_power = &right.power_(raise_pow as f64);
+    fn div(&self, right: &Self) -> Self {
+        let raise_pow = (self.prime - 2) as u32;
+        let temp_power = &right.power_(raise_pow);
 
-    //     let temp_mul = self.mul(&temp_power).unwrap();
-    //     Self {
-    //         number: temp_mul.number,
-    //         prime: self.prime,
-    //     }
-    // }
+        let temp_mul = self.mul(&temp_power).unwrap();
+        Self {
+            number: temp_mul.number,
+            prime: self.prime,
+        }
+    }
 
     fn same_base(&self, right: &Self) -> bool {
         self.prime == right.prime
@@ -267,7 +267,7 @@ mod tests {
             number: 3,
             prime: 13,
         };
-        let power = 3.0;
+        let power = 3;
 
         let result = a.power_(power);
         let expected = FieldElement {
