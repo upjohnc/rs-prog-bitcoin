@@ -1,5 +1,7 @@
 use anyhow::{anyhow, Result};
 
+pub const CURVE_ERROR: &str = "Cannot be on the curve";
+
 #[derive(PartialEq, Debug, Clone)]
 struct Point {
     a: isize,
@@ -11,7 +13,7 @@ struct Point {
 impl Point {
     fn new(x: isize, y: isize, a: isize, b: isize) -> Result<Self> {
         if y.pow(2) != x.pow(3) + a * x + b {
-            return Err(anyhow!("Cannot be on the curve"));
+            return Err(anyhow!(CURVE_ERROR));
         }
         Ok(Self {
             a,
@@ -82,7 +84,7 @@ mod test {
     fn test_exception_raised() {
         let result = Point::new(5, 7, 5, 7);
         let error = result.unwrap_err();
-        assert_eq!(error.to_string(), "Cannot be on the curve");
+        assert_eq!(error.to_string(), CURVE_ERROR);
     }
 
     #[test]

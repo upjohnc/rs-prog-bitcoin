@@ -1,6 +1,6 @@
-use crate::field_element::mod_it;
+use crate::eliptic_curves::CURVE_ERROR;
 use crate::field_element::FieldElement;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 fn confirm_on_curve(
     x: FieldElement,
@@ -15,6 +15,7 @@ fn confirm_on_curve(
     Ok(y_side == x_side)
 }
 
+#[derive(Debug)]
 struct Point {
     a: FieldElement,
     b: FieldElement,
@@ -23,9 +24,11 @@ struct Point {
 }
 
 impl Point {
-    fn new(a: FieldElement, b: FieldElement, x: FieldElement, y: FieldElement) -> Self {
-        todo!("add check for on the curve x y");
-        Self { a, b, x, y }
+    fn new(a: FieldElement, b: FieldElement, x: FieldElement, y: FieldElement) -> Result<Self> {
+        if !confirm_on_curve(x.clone(), y.clone(), a.clone(), b.clone())? {
+            return Err(anyhow!("Cannot be on the curve"));
+        }
+        Ok(Self { a, b, x, y })
     }
 }
 
@@ -34,23 +37,38 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_exception_raised() {
+        let prime_base = 223;
+        let a = FieldElement::new(0, prime_base);
+        let b = FieldElement::new(7, prime_base);
+        let values_to_test = vec![(200, 119), (42, 99)];
+        for (x, y) in values_to_test {
+            let result = Point::new(
+                a.clone(),
+                b.clone(),
+                FieldElement::new(x, prime_base),
+                FieldElement::new(y, prime_base),
+            );
+            let error = result.unwrap_err();
+            assert_eq!(error.to_string(), CURVE_ERROR);
+        }
+    }
+
+    #[test]
     fn test_confirm_on_curve() {
         let prime_base = 223;
         let a = FieldElement::new(0, prime_base);
         let b = FieldElement::new(7, prime_base);
 
-        let values_to_test = vec![
-            (192, 105, true),
-            (17, 56, true),
-            (200, 119, false),
-            (1, 193, true),
-            (42, 99, false),
-        ];
+        let values_to_test = vec![(192, 105, true), (17, 56, true), (1, 193, true)];
         for (x, y, expected) in values_to_test {
-            let x_f = FieldElement::new(x, prime_base);
-            let y_f = FieldElement::new(y, prime_base);
-            let result = confirm_on_curve(x_f, y_f, a.clone(), b.clone()).unwrap();
-            assert_eq!(expected, result);
+            let result = Point::new(
+                a.clone(),
+                b.clone(),
+                FieldElement::new(x, prime_base),
+                FieldElement::new(y, prime_base),
+            );
+            assert!(result.is_ok());
         }
     }
 }
