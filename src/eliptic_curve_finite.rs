@@ -8,14 +8,14 @@ fn confirm_on_curve(
     a: FieldElement,
     b: FieldElement,
 ) -> Result<bool> {
-    let y_side = y.power_(2);
-    let x_3 = x.power_(3);
+    let y_side = y.power_(2.0);
+    let x_3 = x.power_(3.0);
     let a_x = a.mul(&x)?;
     let x_side = x_3.add(&a_x)?.add(&b)?;
     Ok(y_side == x_side)
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 struct PointField {
     a: FieldElement,
     b: FieldElement,
@@ -43,43 +43,55 @@ impl PointField {
         Ok(Self { a, b, x, y })
     }
 
-    fn add(&self, other: &Self) -> bool {
-        // fn add(self, other: Self) -> Self {
-        if self.x.is_none() {
-            // return other;
-            return false;
+    fn add(&self, other: &Self) -> Result<Self> {
+        if self.a != other.a || self.b != other.b {
+            return Err(anyhow!("Not on same curve"));
         }
-        //     if other.x.is_none() {
-        //         return self;
-        //     }
-        //     if self.x == other.x && self.y != other.y {
-        //         return Self::new_infinity(self.a, self.b);
-        //     }
-        //     if self.x != other.x {
-        //         let self_x = self.x.unwrap();
-        //         let other_x = other.x.unwrap();
-        //         let self_y = self.y.unwrap();
-        //         let other_y = other.y.unwrap();
-        //         let slope = (other_y - self_y) / (other_x - self_x);
-        //         let x_3 = slope.pow(2) - self_x - other_x;
-        //         let y_3 = slope * (self_x - x_3) - self_y;
-        //         return Self::new(x_3, y_3, self.a, self.b).unwrap();
-        //     }
-        //     if self == other && self.y.unwrap() == 0 {
-        //         return Self::new_infinity(self.a, self.b);
-        //     }
-        //     if self == other {
-        //         let x_1 = self.x.unwrap();
-        //         let y_1 = self.y.unwrap();
-        //         let slope = (3 * x_1.pow(2) + self.a) / (2 * y_1);
-        //         let x_3 = slope.pow(2) - 2 * x_1;
-        //         let y_3 = slope * (x_1 - x_3) - y_1;
-        //         return Self::new(x_3, y_3, self.a, self.b).unwrap();
-        //     }
+        if self.x.is_none() {
+            return Ok(other.clone());
+        }
+        if other.x.is_none() {
+            return Ok(self.clone());
+        }
 
-        //     self
-        // }
-        true
+        if self.x == other.x && self.y != other.y {
+            return Ok(Self::new(self.a, self.b, None, None)?);
+        }
+
+        if self.x != other.x {
+            let sub_1 = other.y.unwrap().sub(&self.y.unwrap()).unwrap();
+            let sub_2 = other.x.unwrap().sub(&self.x.unwrap()).unwrap();
+            let slope = (sub_1).div(&sub_2);
+            let x = slope
+                .power_(2.0)
+                .sub(&self.x.unwrap())?
+                .sub(&other.x.unwrap())?;
+            let w = self.x.unwrap().sub(&x)?;
+            let y = slope.mul(&w)?.sub(&self.y.unwrap())?;
+            println!("x: {x:?}, y: {y:?}");
+            return Ok(Self::new(self.a, self.b, Some(x), Some(y))?);
+        }
+        let zero_mul = FieldElement::new(0, self.x.unwrap().prime).mul(&self.x.unwrap())?;
+        if self == other && self.y.unwrap() == zero_mul {
+            return Ok(Self::new(self.a, self.b, None, None)?);
+        }
+
+        if self == other {
+            let prime = self.x.unwrap().prime;
+            let temp = self.x.unwrap().power_(2.0);
+            let other = temp.add(&self.a)?;
+            let slope = (FieldElement::new(3, prime).mul(&other))?;
+            let ss = slope.power_(2.0);
+            let zz = FieldElement::new(2, prime).mul(&self.x.unwrap())?;
+            let x = ss.sub(&zz)?;
+            let y = slope
+                .mul(&self.x.unwrap().sub(&x)?)?
+                .sub(&self.y.unwrap())?;
+            return Ok(Self::new(self.a, self.b, Some(x), Some(y))?);
+        }
+
+        // catch all case - not sure if this is correct
+        Ok(self.clone())
     }
 }
 
@@ -145,39 +157,68 @@ mod tests {
             assert_eq!(error.to_string(), CURVE_ERROR);
         }
     }
-    // #[test]
-    // fn test_point_add() {
-    //     let prime = 223;
-    //     let a = FieldElement::new(0, prime);
-    //     let b = FieldElement::new(7, prime);
-    //     let inputs = vec![
-    //         ((Some(170), Some(142)), (Some(60), Some(139))),
-    //         ((Some(47), Some(71)), (Some(17), Some(56))),
-    //         ((Some(143), Some(98)), (Some(76), Some(66))),
-    //     ];
 
-    //     for ((x_1, y_1), (x_2, y_2)) in inputs {
-    //         let x1_ = match x_1 {
-    //             Some(x) => Some(FieldElement::new(x, prime)),
-    //             _ => None,
-    //         };
+    // "prime = 223\n",
+    // "a = FieldElement(num=0, prime=prime)\n",
+    // "b = FieldElement(num=7, prime=prime)\n",
+    // "x1 = FieldElement(num=192, prime=prime)\n",
+    // "y1 = FieldElement(num=105, prime=prime)\n",
+    // "x2 = FieldElement(num=17, prime=prime)\n",
+    // "y2 = FieldElement(num=56, prime=prime)\n",
+    // "p1 = Point(x1, y1, a, b)\n",
+    // "p2 = Point(x2, y2, a, b)\n",
+    // "print(p1+p2)"
+    // ]
+    #[test]
+    fn test_point_add() {
+        let prime = 223;
+        let a = FieldElement::new(0, prime);
+        let b = FieldElement::new(7, prime);
+        let inputs = vec![
+            ((Some(192), Some(105)), (Some(17), Some(56))),
+            // ((Some(170), Some(142)), (Some(60), Some(139))),
+            // ((Some(47), Some(71)), (Some(17), Some(56))),
+            // ((Some(143), Some(98)), (Some(76), Some(66))),
+        ];
+        let zowwee = PointField::new(
+            a,
+            b,
+            Some(FieldElement::new(64, 223)),
+            Some(FieldElement::new(129, 223)),
+        ).unwrap();
 
-    //         let y1_ = match y_1 {
-    //             Some(y) => Some(FieldElement::new(y, prime)),
-    //             _ => None,
-    //         };
-    //         let x2_ = match x_2 {
-    //             Some(x) => Some(FieldElement::new(x, prime)),
-    //             _ => None,
-    //         };
-    //         let y2_ = match y_2 {
-    //             Some(y) => Some(FieldElement::new(y, prime)),
-    //             _ => None,
-    //         };
-    //         let point_1 = PointField::new(a.clone(), b.clone(), x1_, y1_).unwrap();
-    //         let point_2 = PointField::new(a.clone(), b.clone(), x2_, y2_).unwrap();
-    //         let result = point_1.add(&point_2);
-    //         assert_eq!(result, false);
-    //     }
-    // }
+        for ((x_1, y_1), (x_2, y_2)) in inputs {
+            let x1_ = match x_1 {
+                Some(x) => Some(FieldElement::new(x, prime)),
+                _ => None,
+            };
+
+            let y1_ = match y_1 {
+                Some(y) => Some(FieldElement::new(y, prime)),
+                _ => None,
+            };
+            let x2_ = match x_2 {
+                Some(x) => Some(FieldElement::new(x, prime)),
+                _ => None,
+            };
+            let y2_ = match y_2 {
+                Some(y) => Some(FieldElement::new(y, prime)),
+                _ => None,
+            };
+            let point_1 = PointField::new(a.clone(), b.clone(), x1_, y1_).unwrap();
+            let point_2 = PointField::new(a.clone(), b.clone(), x2_, y2_).unwrap();
+            let result = point_1.add(&point_2);
+            // let what = result.unwrap();
+            let expected = PointField::new(
+                a.clone(),
+                b.clone(),
+                Some(FieldElement::new(170, prime)),
+                Some(FieldElement::new(142, prime)),
+            )
+            .unwrap();
+            println!("{:?}", expected);
+            assert_eq!(1, 2);
+            // assert_eq!(what, expected);
+        }
+    }
 }
