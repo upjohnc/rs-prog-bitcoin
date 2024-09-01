@@ -69,11 +69,16 @@ impl FieldElement {
     }
 
     pub fn power_(&self, right: f64) -> Self {
+        // todo: change to a loop
         let temp_number = self.number as f64;
         let exponent = (right as isize % (self.prime - 1)) as f64;
         let power = temp_number.powf(exponent);
+        println!("in power");
+        dbg!(temp_number);
+        dbg!(exponent);
+        dbg!(power);
 
-        let new_number = mod_it_f(power , self.prime as f64);
+        let new_number = mod_it_f(power, self.prime as f64);
 
         Self {
             number: new_number,
@@ -83,7 +88,11 @@ impl FieldElement {
 
     pub fn div(&self, right: &Self) -> Self {
         let raise_pow = (self.prime - 2) as f64;
+        println!("in the div");
+        dbg!(raise_pow);
+        dbg!(right);
         let temp_power = &right.power_(raise_pow);
+        dbg!(temp_power);
 
         let temp_mul = self.mul(&temp_power).unwrap();
         Self {
@@ -294,6 +303,7 @@ mod tests {
             ((3, 13), (1, 13), 3.0),
             ((75, 223), (50, 223), 2.0),
             ((41, 223), (120, 223), 2.0),
+            ((113, 223), (75, 223), 221.0),
         ];
         for ((given_number, given_prime), (expected_number, expected_prime), power) in test_values {
             let a = FieldElement {

@@ -1,6 +1,7 @@
-use crate::eliptic_curves::CURVE_ERROR;
 use crate::field_element::FieldElement;
 use anyhow::{anyhow, Result};
+
+pub const CURVE_ERROR: &str = "Cannot be on the curve";
 
 fn confirm_on_curve(
     x: FieldElement,
@@ -61,7 +62,14 @@ impl PointField {
         if self.x != other.x {
             let sub_1 = other.y.unwrap().sub(&self.y.unwrap()).unwrap();
             let sub_2 = other.x.unwrap().sub(&self.x.unwrap()).unwrap();
-            let slope = (sub_1).div(&sub_2);
+            dbg!(sub_1);
+            dbg!(sub_2);
+            let slope = sub_1.div(&sub_2);
+            dbg!(slope);
+
+            println!("More than enough");
+            println!("Slope: {:?}", slope);
+            println!("Power: {:?}", slope.power_(2.0));
             let x = slope
                 .power_(2.0)
                 .sub(&self.x.unwrap())?
@@ -79,6 +87,8 @@ impl PointField {
         if self == other {
             let prime = self.x.unwrap().prime;
             let temp = self.x.unwrap().power_(2.0);
+            println!("Where are you");
+            println!("{:?}", temp);
             let other = temp.add(&self.a)?;
             let slope = (FieldElement::new(3, prime).mul(&other))?;
             let ss = slope.power_(2.0);
@@ -97,6 +107,8 @@ impl PointField {
 
 #[cfg(test)]
 mod tests {
+    use crate::field_element::mod_it;
+
     use super::*;
 
     #[test]
@@ -175,17 +187,18 @@ mod tests {
         let a = FieldElement::new(0, prime);
         let b = FieldElement::new(7, prime);
         let inputs = vec![
-            ((Some(192), Some(105)), (Some(17), Some(56))),
-            // ((Some(170), Some(142)), (Some(60), Some(139))),
+            // ((Some(192), Some(105)), (Some(17), Some(56))),
+            ((Some(170), Some(142)), (Some(60), Some(139))),
+            // ( (Some(60), Some(139)), (Some(170), Some(142))),
             // ((Some(47), Some(71)), (Some(17), Some(56))),
             // ((Some(143), Some(98)), (Some(76), Some(66))),
         ];
-        let zowwee = PointField::new(
-            a,
-            b,
-            Some(FieldElement::new(64, 223)),
-            Some(FieldElement::new(129, 223)),
-        ).unwrap();
+        // let zowwee = PointField::new(
+        //     a,
+        //     b,
+        //     Some(FieldElement::new(64, 223)),
+        //     Some(FieldElement::new(129, 223)),
+        // ).unwrap();
 
         for ((x_1, y_1), (x_2, y_2)) in inputs {
             let x1_ = match x_1 {
