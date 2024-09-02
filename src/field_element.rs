@@ -59,25 +59,25 @@ impl FieldElement {
         })
     }
 
-    pub fn power_(&self, right: f64) -> Self {
-
-        // let temp_number = self.number as f64;
-        // let exponent = (right as isize % (self.prime - 1)) as f64;
-        //         // let exponent= mod_it(right,(self.prime-1) as f64);
-        // let power = temp_number.powf(exponent);
-        let temp_number = self.number as f64;
-        let power = temp_number.powf(right);
-        let new_number = mod_it(power as isize, self.prime);
+    pub fn power_(&self, right: isize) -> Self {
+        let mut value = self.number;
+        for i in 1..right {
+            value = mod_it(value * self.number, self.prime);
+        }
 
         Self {
-            number: new_number,
+            number: value,
             prime: self.prime,
         }
     }
 
     pub fn div(&self, right: &Self) -> Self {
-        let raise_pow = (self.prime - 2) as f64;
+        let raise_pow = (self.prime - 2);
+        println!("in the div");
+        dbg!(raise_pow);
+        dbg!(right);
         let temp_power = &right.power_(raise_pow);
+        dbg!(temp_power);
 
         let temp_mul = self.mul(&temp_power).unwrap();
         Self {
@@ -284,35 +284,42 @@ mod tests {
 
     #[test]
     fn test_pow_1() {
+        let test_values = vec![
+            ((3, 13), (1, 13), 3),
+            ((75, 223), (50, 223), 2),
+            ((41, 223), (120, 223), 2),
+            ((113, 223), (75, 223), 221),
+        ];
+        for ((given_number, given_prime), (expected_number, expected_prime), power) in test_values {
+            let a = FieldElement {
+                number: given_number,
+                prime: given_prime,
+            };
+
+            let result = a.power_(power);
+            let expected = FieldElement {
+                number: expected_number,
+                prime: expected_prime,
+            };
+            assert_eq!(result, expected);
+        }
+    }
+
+    #[test]
+    fn test_div_1() {
         let a = FieldElement {
             number: 3,
-            prime: 13,
+            prime: 31,
         };
-        let power = 3.0;
-
-        let result = a.power_(power);
+        let b = FieldElement {
+            number: 24,
+            prime: 31,
+        };
+        let result = a.div(&b);
         let expected = FieldElement {
-            number: 1,
-            prime: 13,
+            number: 4,
+            prime: 31,
         };
         assert_eq!(result, expected);
     }
-
-    // #[test]
-    // fn test_div_1() {
-    //     let a = FieldElement {
-    //         number: 3,
-    //         prime: 31,
-    //     };
-    //     let b = FieldElement {
-    //         number: 24,
-    //         prime: 31,
-    //     };
-    //     let result = a.div(&b);
-    //     let expected = FieldElement {
-    //         number: 4,
-    //         prime: 31,
-    //     };
-    //     assert_eq!(result, expected);
-    // }
 }
