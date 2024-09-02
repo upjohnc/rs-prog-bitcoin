@@ -72,7 +72,7 @@ impl FieldElement {
     }
 
     pub fn div(&self, right: &Self) -> Self {
-        let raise_pow = (self.prime - 2) ;
+        let raise_pow = (self.prime - 2);
         println!("in the div");
         dbg!(raise_pow);
         dbg!(right);
