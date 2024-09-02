@@ -9,15 +9,6 @@ pub fn mod_it(left: isize, right: isize) -> isize {
     left % right
 }
 
-pub fn mod_it_f(left: f64, right: f64) -> isize {
-    let left = match left < 0.0 {
-        true => right + left,
-        _ => left,
-    };
-
-    (left % right) as isize
-}
-
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct FieldElement {
     pub number: isize,

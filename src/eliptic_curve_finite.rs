@@ -9,8 +9,8 @@ fn confirm_on_curve(
     a: FieldElement,
     b: FieldElement,
 ) -> Result<bool> {
-    let y_side = y.power_(2.0);
-    let x_3 = x.power_(3.0);
+    let y_side = y.power_(2);
+    let x_3 = x.power_(3);
     let a_x = a.mul(&x)?;
     let x_side = x_3.add(&a_x)?.add(&b)?;
     Ok(y_side == x_side)
@@ -62,21 +62,14 @@ impl PointField {
         if self.x != other.x {
             let sub_1 = other.y.unwrap().sub(&self.y.unwrap()).unwrap();
             let sub_2 = other.x.unwrap().sub(&self.x.unwrap()).unwrap();
-            dbg!(sub_1);
-            dbg!(sub_2);
             let slope = sub_1.div(&sub_2);
-            dbg!(slope);
 
-            println!("More than enough");
-            println!("Slope: {:?}", slope);
-            println!("Power: {:?}", slope.power_(2.0));
             let x = slope
-                .power_(2.0)
+                .power_(2)
                 .sub(&self.x.unwrap())?
                 .sub(&other.x.unwrap())?;
             let w = self.x.unwrap().sub(&x)?;
             let y = slope.mul(&w)?.sub(&self.y.unwrap())?;
-            println!("x: {x:?}, y: {y:?}");
             return Ok(Self::new(self.a, self.b, Some(x), Some(y))?);
         }
         let zero_mul = FieldElement::new(0, self.x.unwrap().prime).mul(&self.x.unwrap())?;
@@ -86,12 +79,12 @@ impl PointField {
 
         if self == other {
             let prime = self.x.unwrap().prime;
-            let temp = self.x.unwrap().power_(2.0);
+            let temp = self.x.unwrap().power_(2);
             println!("Where are you");
             println!("{:?}", temp);
             let other = temp.add(&self.a)?;
             let slope = (FieldElement::new(3, prime).mul(&other))?;
-            let ss = slope.power_(2.0);
+            let ss = slope.power_(2);
             let zz = FieldElement::new(2, prime).mul(&self.x.unwrap())?;
             let x = ss.sub(&zz)?;
             let y = slope
@@ -220,17 +213,20 @@ mod tests {
             };
             let point_1 = PointField::new(a.clone(), b.clone(), x1_, y1_).unwrap();
             let point_2 = PointField::new(a.clone(), b.clone(), x2_, y2_).unwrap();
-            let result = point_1.add(&point_2);
+            let result = point_1.add(&point_2).unwrap();
             // let what = result.unwrap();
+            //Point(x=18, y=-77, a=5, b=7)
             let expected = PointField::new(
                 a.clone(),
                 b.clone(),
-                Some(FieldElement::new(170, prime)),
-                Some(FieldElement::new(142, prime)),
+                Some(FieldElement::new(220, prime)),
+                Some(FieldElement::new(181, prime)),
             )
             .unwrap();
             println!("{:?}", expected);
-            assert_eq!(1, 2);
+            println!("{:?}", result);
+            assert_eq!(result, expected);
+            // assert_eq!(1, 2);
             // assert_eq!(what, expected);
         }
     }
